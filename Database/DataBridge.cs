@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using Firebase;
 using Firebase.Database;
 using UnityEngine;
-using UnityEngine.UI;
 using Firebase.Unity.Editor;
 using Firebase.Auth;
+using UnityEditor;
 
 namespace DataBridgeNS
 {
@@ -32,7 +32,7 @@ namespace DataBridgeNS
         
         
         
-        public void InitUser()
+        public void GetPlayer()
         {
             FirebaseDatabase.DefaultInstance.GetReference("Players").Child(_playerID).GetValueAsync().ContinueWith(
                 task =>
@@ -52,19 +52,19 @@ namespace DataBridgeNS
                     if (task.IsCompleted)
                     {
                         DataSnapshot snapshot = task.Result;
-                        string company = (string) snapshot.Child("companyName").Value;
+                        string company = (string) snapshot.Child("company").Value;
                         string email = (string) snapshot.Child("email").Value;
-                        player = new Player(company, email);
+                        string balance = (string) snapshot.Child("balance").Value;
+                        player = new Player(company, email, balance);
                     }
-                }, TaskScheduler.FromCurrentSynchronizationContext());
+                });
         }
 
-        public string GetName()
+        public string GetPlayerCompany()
         {
             return player.company;
         }
-
-
+        
         private void Exists(String table, String record, String item)
         {
             var id = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
@@ -97,28 +97,29 @@ namespace DataBridgeNS
         }
 
 
-        public void PostUser(string company, string email)
+        public void PostUser(string company, string email, string balance)
         {
-            Player newP = new Player(company, email);
+            Player newPlayer = new Player(company, email, balance);
             var id = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
-            string json = JsonUtility.ToJson(newP);
+            string json = JsonUtility.ToJson(newPlayer);
             _rootReference.Child("Players").Child(id).SetRawJsonValueAsync(json);
         }
 
-        private int GetPlayerBalanceFromDb()
+        private int GetPlayerBalance()
         {
-            int balanceResult;
-            FirebaseDatabase.DefaultInstance.GetReference("Players").Child(_playerID).GetValueAsync().ContinueWith(task => {
+            int balanceResult = 0;
+            FirebaseDatabase.DefaultInstance.GetReference("Players").Child(_playerID).Child("balance").GetValueAsync().ContinueWith(
+                task => 
+                {
                     if (task.IsFaulted) {
-                        // Handle the error...
+                        EditorUtility.DisplayDialog("Error", "Get balance faulted", "Close");
                     }
                     else if (task.IsCompleted) {
                         DataSnapshot snapshot = task.Result;
-                        task.Result
-                        
+                        balanceResult = (int) snapshot.Value;
                     }
                 });
-
+            return balanceResult;
         }
     }
 }

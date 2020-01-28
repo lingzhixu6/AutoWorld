@@ -7,14 +7,14 @@ using UnityEngine;
 public class Player {
     public string company;
     public string email;
-    public int balance;
+    public string balance;
     
     private int steelQuantityOwned;
     private int rubberQuantityOwned;
     private int glassQuantityOwned;
     private int aluminumQuantityOwned;
 
-    public Player(string company, string email, int balance)
+    public Player(string company, string email, string balance)
     {
         this.company = company;
         this.email = email;

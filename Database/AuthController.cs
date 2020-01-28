@@ -81,7 +81,7 @@ public class AuthController : MonoBehaviour
                 msg = "Email entered has already been used";
                 break;
         }
-        EditorUtility.DisplayDialog("Error", msg, "OK");
+        EditorUtility.DisplayDialog("Error", msg, "Close");
 
     }
     

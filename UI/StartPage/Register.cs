@@ -10,11 +10,11 @@ using UnityEditor;
 public class Register : MonoBehaviour
 {
     public GameObject username;
-    public GameObject name;
+    // public GameObject name;    This object is never initialized. May be the cause of nullReference error.
     public GameObject password;
     public GameObject retypePassword;
     private string Username;
-    private string Name;
+    private string Company;
     private string Password;
     private string RetypePassword;
     private string form;
@@ -30,11 +30,11 @@ public class Register : MonoBehaviour
     public void RegisterButton()
     {
         //EditorUtility.DisplayDialog("Title here", "Your text", "Ok");
-        if (Password != "" && RetypePassword != "" && Username != "" && Name != "")
+        if (Password != "" && RetypePassword != "" && Username != "" && Company != "")
         {
             if (Password.Equals(RetypePassword))
             {
-                startRegister(Username, Name, Password);
+                startRegister(Username, Company, Password);
                 username.GetComponent<InputField>().text = "";
                 name.GetComponent<InputField>().text = "";
                 password.GetComponent<InputField>().text = "";
@@ -54,7 +54,7 @@ public class Register : MonoBehaviour
         }
 
     }
-    // Update is called once per frame
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Tab))
@@ -79,18 +79,15 @@ public class Register : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Return))
         {
-       
-                RegisterButton();
-            
+            RegisterButton();
         }
         Username = username.GetComponent<InputField>().text;
-        Name = name.GetComponent<InputField>().text;
+        Company = name.GetComponent<InputField>().text;
         Password = password.GetComponent<InputField>().text;
         RetypePassword = retypePassword.GetComponent<InputField>().text;
-
     }
     
-    public void startRegister(string email, string companyName, string password)
+    public void startRegister(string email, string company, string password)
     {
         string hashPassword = AuthController.Hash(password);
         // if (db.GetExists("Players", "companyName", companyName) == false)
@@ -115,7 +112,7 @@ public class Register : MonoBehaviour
             
             if (task.IsCompleted)
             {    
-                DataBridge.PostUser(companyName, email);
+                DataBridge.PostUser(company, email, balance);
                 EditorUtility.DisplayDialog("Successful", "Registration Complete", "OK");
             }
         });

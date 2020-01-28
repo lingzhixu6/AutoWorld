@@ -2,7 +2,7 @@
 
 public class BuyBtn : MonoBehaviour
 {
-    private DataBridgeNS.DataBridge _dataBridge;
+    private DataBridgeNS.DataBridge _dataBridge = DataBridgeNS.DataBridge.GetInstance();
     
     private bool isBalanceSufficientToBuyDesiredAmt() 
     {

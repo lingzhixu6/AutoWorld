@@ -8,23 +8,25 @@ public class InputFieldBean : MonoBehaviour
     public InputField glassQuantityInputField;
     public InputField aluminumQuantityInputField;
     public InputField rubberQuantityInputField;
-    
-    
-    public int getInputtedSteelQuantity()
+    public static int steelQuantity;
+    public static int glassQuantity;
+    public static int aluminumQuantity;
+    public static int rubberQuantity;
+
+    private void Update()
     {
-        return Int16.Parse(steelQuantityInputField.text);
+        steelQuantity = Int16.Parse(steelQuantityInputField.text);
+        glassQuantity = Int16.Parse(glassQuantityInputField.text);
+        aluminumQuantity = Int16.Parse(aluminumQuantityInputField.text);
+        rubberQuantity = Int16.Parse(rubberQuantityInputField.text);
     }
-    public int getInputtedGlassQuantity()
+
+    public void ClearInputField()
     {
-        return Int16.Parse(glassQuantityInputField.text);
+        steelQuantityInputField.text = "";
+        glassQuantityInputField.text = "";
+        aluminumQuantityInputField.text = "";
+        rubberQuantityInputField.text = "";
     }
-    public int getInputtedAluminumQuantity()
-    {
-        return Int16.Parse(aluminumQuantityInputField.text);
-    }
-    public int getInputtedRubberQuantity()
-    {
-        return Int16.Parse(rubberQuantityInputField.text);
-    }
-    
+
 }

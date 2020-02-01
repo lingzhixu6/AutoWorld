@@ -5,24 +5,13 @@ namespace UI.Dashboard
 {
     public class Dashboard : MonoBehaviour
     {
-    
-
-        public Text companyName;
-        // Start is called before the first frame update
-        void Start()
-        {
-        }
-
+        private Player _player = Player.GetInstance();
+        public Text company_textbox;
+        
         public void UpdatePage()
         {
-            companyName.text = DataBridge.GetName();
+            company_textbox.text = _player.company;
         }
-        // Update is called once per frame
-        void Update()
-        {
-        
-        }
-
 
     }
 }

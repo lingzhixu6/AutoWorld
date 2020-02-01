@@ -14,84 +14,85 @@ using Firebase.Extensions;
 using Firebase.Unity.Editor;
 using UnityEditor;
 
-public class AuthController : MonoBehaviour
+namespace Database
 {
-    
-    public void Start()
+    public class AuthController
     {
-        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
+        // public void Start()
+        // {
+        //     FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
+        //         {
+        //             if (task.Exception != null)
+        //             {
+        //                 Debug.LogError("Failed to initialise Firebase" + task.Exception.ToString());
+        //             }
+        //         }
+        //     );
+        // }
+
+
+        public static void AuthUser(string email, string password)
+        {
+            //  string hashPassword = Hash(password);
+            Credential credential = EmailAuthProvider.GetCredential(email, password);
+            FirebaseAuth.DefaultInstance.SignInWithCredentialAsync(credential).ContinueWith(task =>
             {
-                if (task.Exception != null)
+                if (task.IsCanceled)
                 {
-                    Debug.LogError("Failed to initialise Firebase" + task.Exception.ToString());
+                    FirebaseException e =
+                        task.Exception.Flatten().InnerExceptions[0] as Firebase.FirebaseException;
+                    PromptErrorMessage((AuthError) e.ErrorCode);
                 }
-   
-            }
-        );
-    }
-    
-   
-    public void AuthUser(string email, string password)
-    {
-      //  string hashPassword = Hash(password);
-        Credential credential = EmailAuthProvider.GetCredential(email, password);
-        FirebaseAuth.DefaultInstance.SignInWithCredentialAsync(credential).ContinueWith(task =>
+                if (task.IsFaulted)
+                {
+                    FirebaseException e =
+                        task.Exception.Flatten().InnerExceptions[0] as Firebase.FirebaseException;
+                    PromptErrorMessage((AuthError) e.ErrorCode);
+                }
+            }, TaskScheduler.FromCurrentSynchronizationContext());
+        }
+        
+        public static void PromptErrorMessage(AuthError errorCode)
         {
-            if (task.IsCanceled)
+            string msg = "";
+            msg = errorCode.ToString();
+            switch (errorCode)
             {
-                Firebase.FirebaseException e = task.Exception.Flatten().InnerExceptions[0] as Firebase.FirebaseException;
-                getErrorMessage((AuthError)e.ErrorCode);
-            } 
-            if (task.IsFaulted)
-            {
-                Firebase.FirebaseException e = task.Exception.Flatten().InnerExceptions[0] as Firebase.FirebaseException;
-                getErrorMessage((AuthError)e.ErrorCode);
+                case AuthError.InvalidEmail:
+                    msg = "Email entered is invalid";
+                    break;
+                case AuthError.WrongPassword:
+                    msg = "Wrong Password";
+                    break;
+                case AuthError.AccountExistsWithDifferentCredentials:
+                    msg = "Account already exists with different credentials";
+                    break;
+                case AuthError.WeakPassword:
+                    msg = "Weak password entered";
+                    break;
+                case AuthError.EmailAlreadyInUse:
+                    msg = "Email entered has already been used";
+                    break;
             }
-        }, TaskScheduler.FromCurrentSynchronizationContext());
-    }
-    
-
-    public void Logout()
-    {
-        if (FirebaseAuth.DefaultInstance.CurrentUser != null)
-        {
-            FirebaseAuth.DefaultInstance.SignOut();
+            EditorUtility.DisplayDialog("Error", msg, "Close");
         }
+
+        
+        // public void Logout()
+        // {
+        //     if (FirebaseAuth.DefaultInstance.CurrentUser != null)
+        //     {
+        //         FirebaseAuth.DefaultInstance.SignOut();
+        //     }
+        // }
+
+
+        // public static string Hash(string stringToHash) //done for extra security even though firebase is already secure
+        // {
+        //     using (var sha1 = new SHA1Managed())
+        //     {
+        //         return BitConverter.ToString(sha1.ComputeHash(Encoding.UTF8.GetBytes(stringToHash)));
+        //     }
+        // }
     }
-
-    public static void getErrorMessage(AuthError errorCode)
-    {
-        string msg = "";
-        msg = errorCode.ToString();
-        switch (errorCode)
-        {
-            case AuthError.InvalidEmail:
-                msg = "Email entered is invalid";
-                break;
-            case AuthError.WrongPassword:
-                msg = "Wrong Password";
-                break;
-            case AuthError.AccountExistsWithDifferentCredentials:
-                msg = "Account already exists with different credentials";
-                break;
-            case AuthError.WeakPassword:
-                msg = "Weak password entered";
-                break;
-            case AuthError.EmailAlreadyInUse:
-                msg = "Email entered has already been used";
-                break;
-        }
-        EditorUtility.DisplayDialog("Error", msg, "Close");
-
-    }
-    
-
-    public static string Hash(string stringToHash) //done for extra security even though firebase is already secure
-    {
-        using (var sha1 = new SHA1Managed())
-        {
-            return BitConverter.ToString(sha1.ComputeHash(Encoding.UTF8.GetBytes(stringToHash)));
-        }
-    }
-
 }

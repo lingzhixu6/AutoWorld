@@ -1,32 +1,46 @@
-﻿using UnityEngine;
+﻿using UnityEditor;
+using UnityEngine;
 
 public class BuyBtn : MonoBehaviour
 {
-    private DataBridgeNS.DataBridge _dataBridge = DataBridgeNS.DataBridge.GetInstance();
-    
-    private bool isBalanceSufficientToBuyDesiredAmt() 
-    {
-        
-    }
+    private Database.DataBridge _dataBridge = Database.DataBridge.GetInstance();
 
-    private void updatePlayerMaterialQtyInDb()
+    private int calculateTotal()
     {
-        
-    }
-
-    private void promptPurchaseSucceeded()
-    {
-        
+        int total = InputFieldBean.steelQuantity * 20 
+            + InputFieldBean.glassQuantity * 20
+            + InputFieldBean.aluminumQuantity * 20
+            + InputFieldBean.rubberQuantity * 20;
+        return total;
     }
     
-    private void promptInsufficientBalance()
+    private bool IsBalanceSufficientToBuyDesiredAmt()
     {
-        
+        int playerBalance = _dataBridge.GetPlayerBalance();
+        int total = calculateTotal();
+        return total <= playerBalance;
     }
 
-    private void defaultOperationAfterBtnClick_ClearInputField()
+    private void TryUpdatePlayerMaterialQty()
     {
-        
+        if (IsBalanceSufficientToBuyDesiredAmt())
+        {
+            _dataBridge.UpdatePlayerMaterialQty();
+            PromptPurchaseSucceeded();   //Need to check if update is actually done. BUT HOW?
+        }
+        else
+        {
+            PromptInsufficientBalance();
+        }
+    }
+
+    private void PromptPurchaseSucceeded()
+    {
+        EditorUtility.DisplayDialog("Success", "Purchase succeeded", "Close");
     }
     
+    private void PromptInsufficientBalance()
+    {
+        EditorUtility.DisplayDialog("Failure", "Purchase Failed Due To Insufficient Balance", "Close");
+    }
 }

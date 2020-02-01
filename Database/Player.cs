@@ -7,18 +7,24 @@ using UnityEngine;
 public class Player {
     public string company;
     public string email;
-    public string balance;
+    public int balance;
     
-    private int steelQuantityOwned;
-    private int rubberQuantityOwned;
-    private int glassQuantityOwned;
-    private int aluminumQuantityOwned;
+    private int steelQtyOwned;
+    private int rubberQtyOwned;
+    private int glassQtyOwned;
+    private int aluminumQtyOwned;
 
-    public Player(string company, string email, string balance)
+    public static Player player;
+
+    public Player(string company, string email, int balance)
     {
         this.company = company;
         this.email = email;
         this.balance = balance;
+    }
+    public static Player GetInstance()
+    {
+        return player;      
     }
     
 }

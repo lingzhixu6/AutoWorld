@@ -18,64 +18,50 @@ namespace Database
 {
     public class AuthController
     {
-        // public void Start()
-        // {
-        //     FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
-        //         {
-        //             if (task.Exception != null)
-        //             {
-        //                 Debug.LogError("Failed to initialise Firebase" + task.Exception.ToString());
-        //             }
-        //         }
-        //     );
-        // }
 
-
-        public static void AuthUser(string email, string password)
+        public void AuthUser(string email, string password)
         {
-            //  string hashPassword = Hash(password);
-            Credential credential = EmailAuthProvider.GetCredential(email, password);
-            FirebaseAuth.DefaultInstance.SignInWithCredentialAsync(credential).ContinueWith(task =>
-            {
-                if (task.IsCanceled)
-                {
-                    FirebaseException e =
-                        task.Exception.Flatten().InnerExceptions[0] as Firebase.FirebaseException;
-                    PromptErrorMessage((AuthError) e.ErrorCode);
+            FirebaseAuth.DefaultInstance.SignInWithEmailAndPasswordAsync(email, password).ContinueWith(task => {
+                if (task.IsCanceled) {
+                    Debug.LogError("SignInWithEmailAndPasswordAsync was canceled.");
+                    return;
                 }
-                if (task.IsFaulted)
-                {
-                    FirebaseException e =
-                        task.Exception.Flatten().InnerExceptions[0] as Firebase.FirebaseException;
-                    PromptErrorMessage((AuthError) e.ErrorCode);
+                if (task.IsFaulted) {
+                    Debug.LogError(task.Exception);
+                    return;
                 }
-            }, TaskScheduler.FromCurrentSynchronizationContext());
+                if (task.IsCompleted)
+                {
+                    DataBridge.playerEmail = email;
+                }
+            });
         }
         
-        public static void PromptErrorMessage(AuthError errorCode)
-        {
-            string msg = "";
-            msg = errorCode.ToString();
-            switch (errorCode)
-            {
-                case AuthError.InvalidEmail:
-                    msg = "Email entered is invalid";
-                    break;
-                case AuthError.WrongPassword:
-                    msg = "Wrong Password";
-                    break;
-                case AuthError.AccountExistsWithDifferentCredentials:
-                    msg = "Account already exists with different credentials";
-                    break;
-                case AuthError.WeakPassword:
-                    msg = "Weak password entered";
-                    break;
-                case AuthError.EmailAlreadyInUse:
-                    msg = "Email entered has already been used";
-                    break;
-            }
-            EditorUtility.DisplayDialog("Error", msg, "Close");
-        }
+        
+        // public static void PromptErrorMessage(AuthError errorCode)
+        // {
+        //     string msg = "";
+        //     msg = errorCode.ToString();
+        //     switch (errorCode)
+        //     {
+        //         case AuthError.InvalidEmail:
+        //             msg = "Email entered is invalid";
+        //             break;
+        //         case AuthError.WrongPassword:
+        //             msg = "Wrong Password";
+        //             break;
+        //         case AuthError.AccountExistsWithDifferentCredentials:
+        //             msg = "Account already exists with different credentials";
+        //             break;
+        //         case AuthError.WeakPassword:
+        //             msg = "Weak password entered";
+        //             break;
+        //         case AuthError.EmailAlreadyInUse:
+        //             msg = "Email entered has already been used";
+        //             break;
+        //     }
+        //     EditorUtility.DisplayDialog("Error", msg, "Close");
+        // }
 
         
         // public void Logout()
@@ -86,13 +72,5 @@ namespace Database
         //     }
         // }
 
-
-        // public static string Hash(string stringToHash) //done for extra security even though firebase is already secure
-        // {
-        //     using (var sha1 = new SHA1Managed())
-        //     {
-        //         return BitConverter.ToString(sha1.ComputeHash(Encoding.UTF8.GetBytes(stringToHash)));
-        //     }
-        // }
     }
 }

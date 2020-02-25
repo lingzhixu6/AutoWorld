@@ -1,4 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.IO;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Firebase;
 using Firebase.Database;
 using UnityEngine;
@@ -10,25 +14,59 @@ namespace Database
 {
     public class DataBridge
     {
-        private static bool _dataExists; 
-        private static DatabaseReference _rootReference;
+        //private static bool _dataExists; 
+        private static DatabaseReference _rootReference = FirebaseDatabase.DefaultInstance.RootReference;
         private static readonly DataBridge _dataBridge;
-        private static string _playerID = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
-
+        public static string playerEmail; 
+        
         private DataBridge()
         {
-            FirebaseApp.DefaultInstance.SetEditorDatabaseUrl("https://autoworld-3e603.firebaseio.com/");
-            _rootReference = FirebaseDatabase.DefaultInstance.RootReference;
+            FirebaseApp.DefaultInstance.SetEditorDatabaseUrl("https://autoworld-2.firebaseio.com/");
         }
         
         public static DataBridge GetInstance()
         {
-            return _dataBridge ?? new DataBridge();          //Null Coalescing Operator in C#
+            return new DataBridge();         
+        }
+
+        public void UpdateGooglePlayService()            //As required by Firebase Guide Doc
+        {
+            Firebase.FirebaseApp.CheckAndFixDependenciesAsync().ContinueWith(task => {
+                var dependencyStatus = task.Result;
+                if (dependencyStatus == Firebase.DependencyStatus.Available) {
+                    // Create and hold a reference to your FirebaseApp,
+                    // where app is a Firebase.FirebaseApp property of your application class.
+                    //   app = Firebase.FirebaseApp.DefaultInstance;
+
+                    // Set a flag here to indicate whether Firebase is ready to use by your app.
+                } else {
+                    UnityEngine.Debug.LogError(System.String.Format(
+                        "Could not resolve all Firebase dependencies: {0}", dependencyStatus));
+                    // Firebase Unity SDK is not safe to use here.
+                }
+            });
         }
         
-        public void GetPlayer()
+        string encodeUserEmail(string userEmail) {
+            return userEmail.Replace(".", ",");
+        }       
+        string decodeUserEmail(string userEmail) {
+            return userEmail.Replace(",", ".");
+        }
+        
+        public void WritePlayer(string email, string company)
         {
-            FirebaseDatabase.DefaultInstance.GetReference("Players").Child(_playerID).GetValueAsync().ContinueWith(
+            int defaultBalance = 1000;
+            // Player newPlayer = new Player(company, email, defaultBalance); 
+            // string json = JsonUtility.ToJson(newPlayer);
+            string encodedEmail = encodeUserEmail(email);
+            _rootReference.Child("Players").Child(encodedEmail).Child("company").SetValueAsync(company);
+            _rootReference.Child("Players").Child(encodedEmail).Child("balance").SetValueAsync(defaultBalance);
+        }
+        
+        public void ReadPlayer()
+        {
+            FirebaseDatabase.DefaultInstance.GetReference("Players").GetValueAsync().ContinueWith(
                 task =>
                 {
                     if (task.IsFaulted)
@@ -44,19 +82,13 @@ namespace Database
                     if (task.IsCompleted)
                     {
                         DataSnapshot snapshot = task.Result;
-                        string company = (string) snapshot.Child("company").Value;
-                        string email = (string) snapshot.Child("email").Value;
-                        int balance = (int) snapshot.Child("balance").Value;
-                        Player.player = new Player(company, email, balance);
-                        EditorUtility.DisplayDialog("Error", "Get player SUCCEEDED!", "Close");
+                        string companyResult = snapshot.Child(encodeUserEmail(playerEmail)).Child("company").GetRawJsonValue();
+                        string balanceResult = snapshot.Child(encodeUserEmail(playerEmail)).Child("balance").GetRawJsonValue();
+                        Player.singletonPlayer = new Player(companyResult, decodeUserEmail(playerEmail), balanceResult);
                     }
-                });
+                },TaskScheduler.FromCurrentSynchronizationContext());
         }
-
-        // public string GetPlayerCompany()
-        // {
-        //     return player.company;
-        // }
+        
         
         // private void Exists(String table, String record, String item)
         // {
@@ -82,6 +114,7 @@ namespace Database
         //         });
         // }
 
+        
         // public bool GetExists(String table, String record, String item)
         // {
         //     _dataExists = false;
@@ -93,7 +126,7 @@ namespace Database
         public int GetPlayerBalance()
         {
             int balanceResult = 0;
-            FirebaseDatabase.DefaultInstance.GetReference("Players").Child(_playerID).Child("balance").GetValueAsync().ContinueWith(
+            FirebaseDatabase.DefaultInstance.GetReference("Players").Child(playerEmail).Child("balance").GetValueAsync().ContinueWith(
                 task => 
                 {
                     if (task.IsFaulted) {
@@ -113,7 +146,7 @@ namespace Database
             int glassQtyBeforePurchase = 0;
             int aluminumQtyBeforePurchase = 0;
             int rubberQtyBeforePurchase = 0;
-            FirebaseDatabase.DefaultInstance.GetReference("Players").Child(_playerID).GetValueAsync().ContinueWith(
+            FirebaseDatabase.DefaultInstance.GetReference("Players").Child(playerEmail).GetValueAsync().ContinueWith(
                 task => 
                 {
                     if (task.IsFaulted) {
@@ -127,18 +160,18 @@ namespace Database
                         rubberQtyBeforePurchase = (int) snapshot.Child("Material Possession").Child("Rubber").Value;
                         //Dangerous Nested Call to post below
                         string steelQtyAfterPurchase = JsonUtility.ToJson(steelQtyBeforePurchase + InputFieldBean.steelQuantity);
-                        _rootReference.Child("Players").Child(_playerID).SetRawJsonValueAsync(steelQtyAfterPurchase);
+                        _rootReference.Child("Players").Child(playerEmail).SetRawJsonValueAsync(steelQtyAfterPurchase);
                         string glassQtyAfterPurchase = JsonUtility.ToJson(glassQtyBeforePurchase + InputFieldBean.glassQuantity);
-                        _rootReference.Child("Players").Child(_playerID).SetRawJsonValueAsync(glassQtyAfterPurchase);
+                        _rootReference.Child("Players").Child(playerEmail).SetRawJsonValueAsync(glassQtyAfterPurchase);
                         string aluminumQtyAfterPurchase = JsonUtility.ToJson(aluminumQtyBeforePurchase + InputFieldBean.aluminumQuantity);
-                        _rootReference.Child("Players").Child(_playerID).SetRawJsonValueAsync(aluminumQtyAfterPurchase);
+                        _rootReference.Child("Players").Child(playerEmail).SetRawJsonValueAsync(aluminumQtyAfterPurchase);
                         string rubberQtyAfterPurchase = JsonUtility.ToJson(rubberQtyBeforePurchase + InputFieldBean.rubberQuantity);
-                        _rootReference.Child("Players").Child(_playerID).SetRawJsonValueAsync(rubberQtyAfterPurchase);
+                        _rootReference.Child("Players").Child(playerEmail).SetRawJsonValueAsync(rubberQtyAfterPurchase);
                     }
                 });
         }
 
-        public void CreatePlayerWithEmailAndPassword(string email, string company, string password, int balance)
+        public void CreatePlayerWithEmailAndPassword(string email, string password)
         {
             FirebaseAuth.DefaultInstance.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWith(task =>
             {
@@ -149,19 +182,24 @@ namespace Database
                 }
                 if (task.IsFaulted)
                 {
-                    Debug.LogError("CreateUserWithEmailAndPasswordAsync encountered an error: " + task.Exception);
+                    Debug.LogError(task.Exception);
                     return;
                 }
 
-                // if (task.IsCompleted)
-                // {
-                //     Player newPlayer = new Player(company, email, balance);
-                //     var id = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
-                //     string json = JsonUtility.ToJson(newPlayer);
-                //     
-                //     _rootReference.Child("Players").Child(id).SetRawJsonValueAsync(json);                    EditorUtility.DisplayDialog("Success", "Registration Succeeded", "Close");
-                // }
-             });
+                if (task.IsCompleted)
+                {
+                    EditorUtility.DisplayDialog("Success", "Registration Succeeded", "Close");
+                    // string filePath = "/Users/lingzhixu/Desktop"; 
+                    // using (FileStream fs = File.Create(filePath))     
+                    // {    
+                    //     // Add some text to file    
+                    //     Byte[] title = new UTF8Encoding(true).GetBytes("New Text File");    
+                    //     fs.Write(title, 0, title.Length);    
+                    //     byte[] author = new UTF8Encoding(true).GetBytes("Mahesh Chand");    
+                    //     fs.Write(author, 0, author.Length);    
+                    // }    
+                } 
+            },TaskScheduler.FromCurrentSynchronizationContext());
         }
     }
 }

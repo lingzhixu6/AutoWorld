@@ -5,11 +5,12 @@ namespace UI.Dashboard
 {
     public class Dashboard : MonoBehaviour
     {
-        private Player _player = Player.GetInstance();
+        private Player _player;
         public Text company_textbox;
         
-        public void UpdatePage()
+        void Start()
         {
+            _player = Player.GetInstance();
             company_textbox.text = _player.company;
         }
 

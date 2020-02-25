@@ -7,16 +7,16 @@ using UnityEngine;
 public class Player {
     public string company;
     public string email;
-    public int balance;
+    public string balance;
     
     private int steelQtyOwned;
     private int rubberQtyOwned;
     private int glassQtyOwned;
     private int aluminumQtyOwned;
 
-    public static Player player;
+    public static Player singletonPlayer;
 
-    public Player(string company, string email, int balance)
+    public Player(string company, string email, string balance)
     {
         this.company = company;
         this.email = email;
@@ -24,7 +24,7 @@ public class Player {
     }
     public static Player GetInstance()
     {
-        return player;      
+        return singletonPlayer;      
     }
     
 }

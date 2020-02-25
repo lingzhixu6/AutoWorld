@@ -1,8 +1,12 @@
-﻿using Database;
+﻿using System;
+using Database;
+using Firebase.Auth;
+using Unity.UNetWeaver;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEditor;
 using UnityEngine.Serialization;
+using IBM;
 
 public class RegisterBtn : MonoBehaviour
 {
@@ -13,11 +17,15 @@ public class RegisterBtn : MonoBehaviour
     public InputField retypePassword_inputfield;
     public Button register_button;
     
+    
     void Start()
     {
+        Debug.Log("Register button Start() is called");
         _dataBridge = DataBridge.GetInstance();
+        _dataBridge.UpdateGooglePlayService();
+        // Test.Main();
     }
-
+    
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Tab))
@@ -40,25 +48,38 @@ public class RegisterBtn : MonoBehaviour
             }
         }
     }
-    
-    public void InvokeRegisterBtn()
+
+    private bool CheckAllInputfieldsAreFilled()
     {
         if (password_inputfield.text != "" && retypePassword_inputfield.text != "" && email_inputfield.text != "" && company_inputfield.text != "")
         {
-            if (password_inputfield.text.Equals(retypePassword_inputfield.text))
+            return true;
+        }
+        EditorUtility.DisplayDialog("Failure", "Fill in All Details", "Close");
+        return false;
+    }
+
+    private bool CheckPasswordIsValid()
+    {
+        if (password_inputfield.text.Equals(retypePassword_inputfield.text))
+        {
+            if (password_inputfield.text.Length >= 6)
             {
-                int defaultBalanceWhenRegister = 1000;
-                _dataBridge.CreatePlayerWithEmailAndPassword(email_inputfield.text, company_inputfield.text, password_inputfield.text, defaultBalanceWhenRegister);
-                ClearInputfield();
-            }
-            else
-            {
-                EditorUtility.DisplayDialog("Failure", "Passwords Do Not Match", "Close");
+                return true;
             }
         }
-        else
+        EditorUtility.DisplayDialog("Failure", "Passwords must match and be no shorter than 6 characters", "Close");
+        return false;
+    }
+    
+    public void InvokeRegisterBtn()
+    {
+        if (CheckAllInputfieldsAreFilled() && CheckPasswordIsValid())
         {
-            EditorUtility.DisplayDialog("Failure", "Fill in All Details", "Close");
+            _dataBridge = DataBridge.GetInstance();
+            _dataBridge.CreatePlayerWithEmailAndPassword(email_inputfield.text,password_inputfield.text);
+            _dataBridge.WritePlayer(email_inputfield.text, company_inputfield.text);
+            ClearInputfield();
         }
     }
 

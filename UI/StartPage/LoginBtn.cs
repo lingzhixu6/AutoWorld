@@ -2,9 +2,9 @@
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using Database;
 using Firebase.Auth;
-using UnityEngine;
 using UnityEditor;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
@@ -21,7 +21,9 @@ public class LoginBtn : MonoBehaviour
     
     void Start()
     {
+        Debug.Log("Login button Start() is called");
         _dataBridge = DataBridge.GetInstance();
+        _dataBridge.UpdateGooglePlayService();
     }
 
     void Update()
@@ -43,12 +45,22 @@ public class LoginBtn : MonoBehaviour
     {
         if (email_inputfield.text != "" && password_inputfield.text != "")
         {
-            AuthController.AuthUser(email_inputfield.text, password_inputfield.text);
-            //above code is faulted. But that does not stop the code below executing!!
-            _dataBridge.GetPlayer();
-            email_inputfield.GetComponent<InputField>().text = "";
-            password_inputfield.GetComponent<InputField>().text = "";
+            AuthController authController = new AuthController();
+            string temp1 = email_inputfield.text;
+            string temp2 = password_inputfield.text;
+            authController.AuthUser(temp1, temp2);
+            _dataBridge = DataBridge.GetInstance();
+            _dataBridge.ReadPlayer();
+            if (DataBridge.playerEmail == null || Player.singletonPlayer == null)
+            {
+                EditorUtility.DisplayDialog("Waiting", "Waiting for response from authentication server, please try again.", "Close");
+                return;
+            }
+            ClearInputfield();
             SceneManager.LoadScene(0);
+            Debug.Log(Player.singletonPlayer.company);
+            Debug.Log(Player.singletonPlayer.email);
+            Debug.Log(Player.singletonPlayer.balance);
         }
         else
         {
@@ -62,4 +74,9 @@ public class LoginBtn : MonoBehaviour
         return FirebaseAuth.DefaultInstance.CurrentUser != null;
     }
 
+    private void ClearInputfield()
+    {
+        email_inputfield.text = "";
+        password_inputfield.text = "";
+    }
 }
